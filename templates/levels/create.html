@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Nuevo nivel</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <a href="/schools/{{ school.id }}/levels" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="/schools/{{ school.id }}/levels/create">
+
+            <div class="mb-3">
+                <label class="form-label">Nombre del nivel</label>
+                <input
+                    type="text"
+                    name="name"
+                    class="form-control"
+                    placeholder="Ej: Inicial, Primario, Secundario"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Alias para importación</label>
+                <input
+                    type="text"
+                    name="alias"
+                    class="form-control"
+                    placeholder="Ej: INICIAL, PRIMARIO, SECUNDARIO"
+                    required
+                >
+                <small class="text-muted">
+                    Este alias se usará en el Excel en la columna nivel_alias.
+                    El sistema lo guardará en mayúsculas y sin espacios.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Cuota mensual</label>
+                <input
+                    type="number"
+                    name="monthly_fee"
+                    step="0.01"
+                    min="0"
+                    class="form-control"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Punto de venta ARCA</label>
+                <input
+                    type="number"
+                    name="point_of_sale"
+                    min="1"
+                    class="form-control"
+                    placeholder="Ej: 3"
+                    required
+                >
+                <small class="text-muted">
+                    Punto de venta Web Services que corresponde a este nivel.
+                    Ejemplo: Inicial → 3, Secundaria → 4, Terciaria → 5.
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Guardar nivel
+            </button>
+
+            <a href="/schools/{{ school.id }}/levels" class="btn btn-secondary">
+                Cancelar
+            </a>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

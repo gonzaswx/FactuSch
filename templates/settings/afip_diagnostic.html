@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Diagnóstico ARCA</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <a href="/schools/{{ school.id }}/settings" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+{% if diagnostic.ready_to_bill %}
+    <div class="alert alert-success">
+        Sistema listo para facturar.
+    </div>
+{% else %}
+    <div class="alert alert-warning">
+        La configuración todavía no está completa.
+    </div>
+{% endif %}
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Estado general</h5>
+
+        <table class="table table-bordered align-middle">
+            <tbody>
+                <tr>
+                    <th>SMTP</th>
+                    <td>
+                        {% if diagnostic.smtp_ok %}
+                            <span class="badge bg-success">OK</span>
+                        {% else %}
+                            <span class="badge bg-danger">Incompleto</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>CUIT</th>
+                    <td>{{ settings.afip_cuit or "-" }}</td>
+                </tr>
+
+                <tr>
+                    <th>Razón social</th>
+                    <td>{{ settings.afip_business_name or "-" }}</td>
+                </tr>
+
+                <tr>
+                    <th>Punto de venta</th>
+                    <td>{{ settings.afip_point_of_sale or "-" }}</td>
+                </tr>
+
+                <tr>
+                    <th>Entorno</th>
+                    <td>{{ settings.afip_environment or "-" }}</td>
+                </tr>
+
+                <tr>
+                    <th>CRT</th>
+                    <td>
+                        {% if diagnostic.cert_exists %}
+                            <span class="badge bg-success">Cargado</span>
+                            <div class="small text-muted">{{ settings.afip_cert_path }}</div>
+                        {% else %}
+                            <span class="badge bg-danger">No encontrado</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>KEY</th>
+                    <td>
+                        {% if diagnostic.key_exists %}
+                            <span class="badge bg-success">Cargada</span>
+                            <div class="small text-muted">{{ settings.afip_key_path }}</div>
+                        {% else %}
+                            <span class="badge bg-danger">No encontrada</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>CSR</th>
+                    <td>
+                        {% if diagnostic.csr_exists %}
+                            <span class="badge bg-success">Disponible</span>
+                            <div class="small text-muted">{{ diagnostic.csr_path }}</div>
+                        {% else %}
+                            <span class="badge bg-secondary">No disponible</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Token ARCA / TA</h5>
+
+        {% if diagnostic.ta_info.exists %}
+            <p>
+                Estado:
+                {% if diagnostic.ta_info.valid %}
+                    <span class="badge bg-success">Vigente</span>
+                {% else %}
+                    <span class="badge bg-warning text-dark">Vencido</span>
+                {% endif %}
+            </p>
+
+            <p class="mb-1">
+                <strong>Vencimiento:</strong>
+                {{ diagnostic.ta_info.expiration or "-" }}
+            </p>
+
+            <p class="small text-muted mb-0">
+                {{ diagnostic.ta_info.path }}
+            </p>
+        {% else %}
+            <span class="badge bg-secondary">Sin TA cacheado</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Conexión ARCA</h5>
+
+        {% if diagnostic.connection_result %}
+            {% if diagnostic.connection_result.ok %}
+                <div class="alert alert-success">
+                    {{ diagnostic.connection_result.message }}
+                </div>
+            {% else %}
+                <div class="alert alert-danger">
+                    <strong>{{ diagnostic.connection_result.message }}</strong>
+
+                    {% if diagnostic.connection_result.errors %}
+                        <ul class="mb-0 mt-2">
+                            {% for error in diagnostic.connection_result.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-secondary">
+                No se intentó conexión porque la configuración local está incompleta.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+        <h5 class="mb-3">Última factura registrada</h5>
+
+        {% if diagnostic.last_invoice %}
+            <table class="table table-bordered align-middle">
+                <tbody>
+                    <tr>
+                        <th>ID</th>
+                        <td>#{{ diagnostic.last_invoice.id }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Factura</th>
+                        <td>
+                            {{ diagnostic.last_invoice.point_of_sale }}-{{ diagnostic.last_invoice.invoice_number }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Período</th>
+                        <td>
+                            {% if diagnostic.last_invoice.period_month and diagnostic.last_invoice.period_year %}
+                                {{ diagnostic.last_invoice.period_month }}/{{ diagnostic.last_invoice.period_year }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Estado</th>
+                        <td>{{ diagnostic.last_invoice.status }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Resultado ARCA</th>
+                        <td>{{ diagnostic.last_invoice.afip_result or "-" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>CAE</th>
+                        <td>{{ diagnostic.last_invoice.cae or "-" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Vencimiento CAE</th>
+                        <td>{{ diagnostic.last_invoice.cae_expiration or "-" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ diagnostic.last_invoice.email_status or "-" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Observación ARCA</th>
+                        <td>{{ diagnostic.last_invoice.afip_observation or "-" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted mb-0">
+                Todavía no hay facturas registradas.
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Importar alumnos</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <a href="/schools/{{ school.id }}/students" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="alert alert-info">
+    <strong>Importante:</strong>
+    antes de importar alumnos, cargá los niveles de la escuela y verificá sus alias.
+    El archivo debe tener la columna <strong>nivel_alias</strong>.
+</div>
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1">Plantilla de importación</h5>
+                <p class="text-muted mb-0">
+                    Descargá una plantilla Excel con columnas, ejemplos, niveles disponibles e instrucciones.
+                </p>
+            </div>
+
+            <a href="/schools/{{ school.id }}/students/import/template" class="btn btn-outline-primary">
+                Descargar plantilla Excel
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% if levels %}
+    <div class="card app-card mb-4">
+        <div class="card-body">
+
+            <h5 class="mb-3">Niveles disponibles</h5>
+
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Nivel</th>
+                    <th>Alias para Excel</th>
+                    <th>Cuota mensual</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for level in levels %}
+                    <tr>
+                        <td>{{ level.name }}</td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ level.alias }}
+                            </span>
+                        </td>
+                        <td>$ {{ "%.2f"|format(level.monthly_fee or 0) }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-warning">
+        Todavía no hay niveles cargados. Antes de importar alumnos, creá al menos un nivel.
+        <a href="/schools/{{ school.id }}/levels/create">Crear nivel</a>
+    </div>
+{% endif %}
+
+<div class="card app-card">
+    <div class="card-body">
+
+        {% if result %}
+            {% if result.imported > 0 %}
+                <div class="alert alert-success">
+                    Importados: <strong>{{ result.imported }}</strong> ·
+                    Omitidos: <strong>{{ result.skipped }}</strong>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    No se importaron alumnos. Omitidos: <strong>{{ result.skipped }}</strong>
+                </div>
+            {% endif %}
+
+            {% if result.errors %}
+                <div class="alert alert-warning">
+                    <strong>Detalle de errores:</strong>
+                    <ul class="mb-0 mt-2">
+                        {% for error in result.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <form method="post" action="/schools/{{ school.id }}/students/import" enctype="multipart/form-data">
+
+            <div class="mb-3">
+                <label class="form-label">Archivo CSV o Excel</label>
+                <input type="file" name="file" class="form-control" accept=".csv,.xlsx" required>
+                <small class="text-muted">
+                    Formatos permitidos: .csv y .xlsx
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" {% if not levels %}disabled{% endif %}>
+                Importar alumnos
+            </button>
+
+        </form>
+
+        <hr class="my-4">
+
+        <h6>Formato esperado</h6>
+
+        <pre class="bg-light p-3 rounded">full_name,dni,email,course,division,guardian_name,guardian_dni,nivel_alias,monthly_fee
+Juan Perez,40111222,responsable@mail.com,5,A,Carlos Perez,20111222,PRIMARIO,
+Maria Lopez,41222333,responsable2@mail.com,4,B,Ana Lopez,22111222,SECUNDARIO,50000</pre>
+
+        <p class="text-muted mb-0">
+            Los campos <strong>full_name</strong>, <strong>dni</strong> y <strong>nivel_alias</strong> son obligatorios.
+            Si <strong>monthly_fee</strong> viene vacío o en cero, el sistema usa la cuota configurada en el nivel.
+        </p>
+
+    </div>
+</div>
+
+{% endblock %}

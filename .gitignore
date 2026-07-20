@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Variables de entorno
+.env
+.env.*
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# PDFs generados
+storage/pdfs/
+
+# Certificados
+storage/certs/
+
+# Logos (cuando migremos)
+storage/logos/
+
+# Cache
+.pytest_cache/
+.coverage
+
+# Alembic
+*.sqlite
+
+# Logs
+*.log

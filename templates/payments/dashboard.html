@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Cobranzas</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <a href="/schools/{{ school.id }}/students" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+{% if reminder_status %}
+    {% if reminder_status == "success" %}
+        <div class="alert alert-success">{{ reminder_message }}</div>
+    {% else %}
+        <div class="alert alert-danger">{{ reminder_message }}</div>
+    {% endif %}
+{% endif %}
+
+{% if payment_status %}
+    {% if payment_status == "success" %}
+        <div class="alert alert-success">{{ payment_message }}</div>
+    {% else %}
+        <div class="alert alert-danger">{{ payment_message }}</div>
+    {% endif %}
+{% endif %}
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+        <form method="get" action="/schools/{{ school.id }}/payments">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Mes</label>
+                    <input
+                        type="number"
+                        name="period_month"
+                        min="1"
+                        max="12"
+                        class="form-control"
+                        value="{{ period_month or '' }}"
+                        placeholder="Ej: 6"
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Año</label>
+                    <input
+                        type="number"
+                        name="period_year"
+                        class="form-control"
+                        value="{{ period_year or '' }}"
+                        placeholder="Ej: 2026"
+                    >
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-primary w-100">
+                        Filtrar
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="mt-3 text-end">
+            {% if period_month and period_year %}
+                <a
+                    href="/schools/{{ school.id }}/payments/export?period_month={{ period_month }}&period_year={{ period_year }}"
+                    class="btn btn-success"
+                >
+                    Exportar Excel
+                </a>
+            {% else %}
+                <a
+                    href="/schools/{{ school.id }}/payments/export"
+                    class="btn btn-success"
+                >
+                    Exportar Excel
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturado</small>
+                <h4>$ {{ "%.2f"|format(total_invoiced) }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Cobrado</small>
+                <h4 class="text-success">$ {{ "%.2f"|format(total_paid) }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Pendiente</small>
+                <h4 class="text-warning">$ {{ "%.2f"|format(total_pending) }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Vencido</small>
+                <h4 class="text-danger">$ {{ "%.2f"|format(total_overdue) }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">% cobrado</small>
+                <h4>{{ paid_percentage }}%</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturas vencidas</small>
+                <h4 class="text-danger">{{ overdue_count }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Alumnos morosos</small>
+                <h4 class="text-danger">{{ overdue_students_count }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        <h5 class="mb-3">Facturas pendientes</h5>
+
+        {% if pending_invoices %}
+
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Período</th>
+                    <th>Factura</th>
+                    <th>Importe</th>
+                    <th>Vencimiento</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for invoice in pending_invoices %}
+                    {% set student = students_by_id.get(invoice.student_id) %}
+
+                    <tr>
+                        <td>
+                            {% if student %}
+                                <div class="fw-semibold">{{ student.full_name }}</div>
+                                <small class="text-muted">DNI {{ student.dni }}</small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.period_month and invoice.period_year %}
+                                {{ invoice.period_month }}/{{ invoice.period_year }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>{{ invoice.point_of_sale }}-{{ invoice.invoice_number }}</td>
+
+                        <td class="fw-bold">
+                            $ {{ "%.2f"|format(invoice.amount) }}
+                        </td>
+
+                        <td>{{ invoice.due_date or "-" }}</td>
+
+                        <td>
+                            {% if invoice.due_date and invoice.due_date < today %}
+                                <span class="badge bg-danger">Vencida</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% endif %}
+                        </td>
+
+                        <td style="min-width: 520px;">
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+
+                                <a
+                                    href="/invoices/{{ invoice.id }}/pdf"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    PDF
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="/schools/{{ school.id }}/payments/{{ invoice.id }}/send-reminder"
+                                    class="d-inline"
+                                >
+                                    <button class="btn btn-sm btn-outline-warning" type="submit">
+                                        Recordatorio
+                                    </button>
+                                </form>
+
+                                <form
+                                    method="post"
+                                    action="/schools/{{ school.id }}/payments/{{ invoice.id }}/pay"
+                                    class="d-flex gap-2 align-items-center"
+                                >
+                                    <select
+                                        name="payment_method"
+                                        class="form-select form-select-sm"
+                                        style="width: 140px;"
+                                        required
+                                    >
+                                        <option value="">Método</option>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Transferencia">Transferencia</option>
+                                        <option value="Mercado Pago">Mercado Pago</option>
+                                        <option value="Débito">Débito</option>
+                                        <option value="Crédito">Crédito</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+
+                                    <input
+                                        type="text"
+                                        name="payment_note"
+                                        class="form-control form-control-sm"
+                                        style="width: 140px;"
+                                        placeholder="Referencia"
+                                    >
+
+                                    <button class="btn btn-sm btn-success" type="submit">
+                                        Cobrada
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+
+            <p class="text-muted mb-0">
+                No hay facturas pendientes para el filtro seleccionado.
+            </p>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

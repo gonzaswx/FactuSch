@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+
+        <div class="card app-card mt-5">
+            <div class="card-body p-4">
+
+                <h1 class="page-title text-center mb-2">Ingresar</h1>
+                <p class="page-subtitle text-center mb-4">
+                    Accedé al panel de facturación escolar
+                </p>
+
+                {% if error %}
+                    <div class="alert alert-danger">
+                        {{ error }}
+                    </div>
+                {% endif %}
+
+                <form method="post" action="/login">
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Ingresar
+                    </button>
+                    <div class="text-center mt-3">
+                    <a href="/forgot-password" class="text-decoration-none">
+                     ¿Olvidaste tu contraseña?
+                    </a>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

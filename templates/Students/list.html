@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Alumnos</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="/schools/{{ school.id }}/dashboard" class="btn btn-secondary">Volver</a>
+
+        <a href="/schools/{{ school.id }}/levels" class="btn btn-outline-secondary">
+            Niveles
+        </a>
+
+        <a href="/schools/{{ school.id }}/payments" class="btn btn-outline-success">
+            Cobranzas
+        </a>
+
+        <a href="/schools/{{ school.id }}/billing" class="btn btn-success">
+            Facturación masiva
+        </a>
+
+        <a href="/schools/{{ school.id }}/students/import" class="btn btn-outline-primary">
+            Importar CSV
+        </a>
+
+        <a href="/schools/{{ school.id }}/students/create" class="btn btn-primary">
+            Nuevo alumno
+        </a>
+    </div>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        {% if students %}
+
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Alumno</th>
+                    <th>Nivel</th>
+                    <th>Estado</th>
+                    <th>DNI</th>
+                    <th>Email</th>
+                    <th>Curso</th>
+                    <th>Tutor</th>
+                    <th>DNI tutor</th>
+                    <th>Cuota</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for student in students %}
+                    {% set level = levels_by_id.get(student.level_id) %}
+
+                    <tr class="{% if not student.is_active %}table-light text-muted{% endif %}">
+                        <td class="text-muted">#{{ student.id }}</td>
+
+                        <td>
+                            <div class="fw-semibold">{{ student.full_name }}</div>
+                            <small class="text-muted">
+                                División {{ student.division or "-" }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {% if level %}
+                                <span class="badge bg-primary">{{ level.name }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Sin nivel</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if student.is_active %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ student.dni }}</td>
+                        <td>{{ student.email or "-" }}</td>
+                        <td>{{ student.course or "-" }}</td>
+                        <td>{{ student.guardian_name or "-" }}</td>
+                        <td>{{ student.guardian_dni or "-" }}</td>
+
+                        <td class="fw-bold">
+                            $ {{ "%.2f"|format(student.monthly_fee or 0) }}
+                        </td>
+
+                        <td class="text-end" style="min-width: 330px;">
+
+                            {% if student.is_active %}
+                                <form
+                                    method="post"
+                                    action="/schools/{{ school.id }}/students/{{ student.id }}/invoices/issue"
+                                    class="d-inline"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="amount"
+                                        value="{{ student.monthly_fee or 0 }}"
+                                    >
+
+                                </form>
+                            {% endif %}
+
+                            <a href="/schools/{{ school.id }}/students/{{ student.id }}/edit"
+                            class="btn btn-sm btn-outline-primary"
+                            >
+                                Editar
+                            </a>
+
+                            <a
+                                href="/schools/{{ school.id }}/students/{{ student.id }}/invoices"
+                                class="btn btn-sm btn-outline-secondary"
+                            >
+                                Facturas
+                            </a>
+
+                            <form
+                                method="post"
+                                action="/schools/{{ school.id }}/students/{{ student.id }}/toggle-active"
+                                class="d-inline"
+                            >
+                                {% if student.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Dar de baja
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Reactivar
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+
+            <div class="text-center py-5">
+                <h5 class="mb-2">Todavía no hay alumnos cargados</h5>
+                <p class="text-muted mb-4">
+                    Podés cargar alumnos manualmente o importar un archivo CSV.
+                </p>
+
+                <a href="/schools/{{ school.id }}/students/import" class="btn btn-outline-primary">
+                    Importar CSV
+                </a>
+
+                <a href="/schools/{{ school.id }}/students/create" class="btn btn-primary">
+                    Nuevo alumno
+                </a>
+            </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

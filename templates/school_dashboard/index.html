@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Panel del colegio</h1>
+        <p class="page-subtitle mb-0">
+            {{ school.name }} · {{ current_month }}/{{ current_year }}
+        </p>
+    </div>
+</div>
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Aplicaciones</h5>
+
+        <div class="row g-3">
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="/schools/{{ school.id }}/students" class="text-decoration-none">
+                    <div class="app-launcher-card">
+                        <div class="app-launcher-icon">👨‍🎓</div>
+                        <div class="app-launcher-title">Alumnos</div>
+                        <div class="app-launcher-text">Gestión de alumnos</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="/schools/{{ school.id }}/levels" class="text-decoration-none">
+                    <div class="app-launcher-card">
+                        <div class="app-launcher-icon">🏫</div>
+                        <div class="app-launcher-title">Niveles</div>
+                        <div class="app-launcher-text">Cursos y cuotas</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="/schools/{{ school.id }}/billing" class="text-decoration-none">
+                    <div class="app-launcher-card">
+                        <div class="app-launcher-icon">🧾</div>
+                        <div class="app-launcher-title">Facturación</div>
+                        <div class="app-launcher-text">Emisión masiva</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="/schools/{{ school.id }}/jobs" class="text-decoration-none">
+                    <div class="app-launcher-card">
+                        <div class="app-launcher-icon">📦</div>
+                        <div class="app-launcher-title">Lotes</div>
+                        <div class="app-launcher-text">Historial de procesos</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="/schools/{{ school.id }}/payments" class="text-decoration-none">
+                    <div class="app-launcher-card">
+                        <div class="app-launcher-icon">💰</div>
+                        <div class="app-launcher-title">Cobranzas</div>
+                        <div class="app-launcher-text">Pagos y deuda</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="/schools/{{ school.id }}/payments/export" class="text-decoration-none">
+                    <div class="app-launcher-card">
+                        <div class="app-launcher-icon">📊</div>
+                        <div class="app-launcher-title">Excel</div>
+                        <div class="app-launcher-text">Exportar cobranzas</div>
+                    </div>
+                </a>
+            </div>
+
+            {% if request.cookies.get("role") == "admin" %}
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="/schools/{{ school.id }}/settings" class="text-decoration-none">
+                        <div class="app-launcher-card">
+                            <div class="app-launcher-icon">⚙️</div>
+                            <div class="app-launcher-title">Configuración</div>
+                            <div class="app-launcher-text">SMTP y ARCA</div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <a href="/schools/{{ school.id }}/settings/afip/diagnostic" class="text-decoration-none">
+                        <div class="app-launcher-card">
+                            <div class="app-launcher-icon">🩺</div>
+                            <div class="app-launcher-title">Diagnóstico</div>
+                            <div class="app-launcher-text">Estado ARCA</div>
+                        </div>
+                    </a>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Alumnos activos</small>
+                <h3 class="mb-0">{{ total_students }}</h3>
+                <small class="text-muted">Inactivos: {{ inactive_students }}</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturado este mes</small>
+                <h3 class="mb-0">$ {{ "%.2f"|format(total_invoiced) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Cobrado este mes</small>
+                <h3 class="mb-0 text-success">$ {{ "%.2f"|format(total_paid) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Pendiente este mes</small>
+                <h3 class="mb-0 text-warning">$ {{ "%.2f"|format(total_pending) }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mb-4">
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Saldo vencido</small>
+                <h3 class="mb-0 text-danger">$ {{ "%.2f"|format(total_overdue) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Alumnos morosos</small>
+                <h3 class="mb-0 text-danger">{{ overdue_students_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturas pagadas</small>
+                <h3 class="mb-0 text-success">{{ paid_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturas pendientes</small>
+                <h3 class="mb-0 text-warning">{{ pending_count }}</h3>
+                {% if overdue_count > 0 %}
+                    <small class="text-danger">Vencidas: {{ overdue_count }}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mb-4">
+
+    <div class="col-md-6">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Porcentaje cobrado del mes</small>
+                <h2 class="mb-2">{{ paid_percentage }}%</h2>
+
+                <div class="progress">
+                    <div
+                        class="progress-bar"
+                        role="progressbar"
+                        style="width: {{ paid_percentage }}%;"
+                    >
+                        {{ paid_percentage }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Accesos rápidos</small>
+
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a href="/schools/{{ school.id }}/students/create" class="btn btn-sm btn-outline-primary">
+                        Nuevo alumno
+                    </a>
+
+                    <a href="/schools/{{ school.id }}/students/import" class="btn btn-sm btn-outline-primary">
+                        Importar alumnos
+                    </a>
+
+                    <a href="/schools/{{ school.id }}/levels" class="btn btn-sm btn-outline-secondary">
+                        Niveles
+                    </a>
+
+                    <a href="/schools/{{ school.id }}/jobs" class="btn btn-sm btn-outline-dark">
+                        Lotes
+                    </a>
+
+                    <a href="/schools/{{ school.id }}/payments/export" class="btn btn-sm btn-outline-success">
+                        Exportar cobranzas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        <h5 class="mb-3">Últimas facturas emitidas</h5>
+
+        {% if recent_invoices %}
+
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Período</th>
+                    <th>Factura</th>
+                    <th>Importe</th>
+                    <th>Vencimiento</th>
+                    <th>Pago</th>
+                    <th>Email</th>
+                    <th>PDF</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for invoice in recent_invoices %}
+                    {% set student = students_by_id.get(invoice.student_id) %}
+                    <tr>
+                        <td>
+                            {% if student %}
+                                <a href="/schools/{{ school.id }}/students/{{ student.id }}/invoices">
+                                    {{ student.full_name }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.period_month and invoice.period_year %}
+                                {{ invoice.period_month }}/{{ invoice.period_year }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.full_invoice_number %}
+                                {{ invoice.full_invoice_number }}
+                            {% else %}
+                                {{ invoice.point_of_sale }}-{{ invoice.invoice_number }}
+                            {% endif %}
+                        </td>
+
+                        <td class="fw-bold">
+                            $ {{ "%.2f"|format(invoice.amount) }}
+                        </td>
+
+                        <td>{{ invoice.due_date or "-" }}</td>
+
+                        <td>
+                            {% if invoice.is_paid %}
+                                <span class="badge bg-success">Pagada</span>
+                            {% elif invoice.due_date and invoice.due_date < today %}
+                                <span class="badge bg-danger">Vencida</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.email_status == "sent" %}
+                                <span class="badge bg-success">Enviado</span>
+                            {% elif invoice.email_status == "error" %}
+                                <span class="badge bg-danger">Error</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pendiente</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a href="/invoices/{{ invoice.id }}/pdf" class="btn btn-sm btn-outline-primary">
+                                PDF
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+
+            <p class="text-muted mb-0">Todavía no hay facturas emitidas.</p>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

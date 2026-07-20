@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Editar colegio</h1>
+        <p class="page-subtitle mb-0">
+            {{ school.name }}
+        </p>
+    </div>
+
+    <a href="/schools/" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="/schools/{{ school.id }}/edit">
+
+            <div class="mb-3">
+                <label class="form-label">Nombre del colegio *</label>
+                <input
+                    type="text"
+                    name="name"
+                    class="form-control"
+                    value="{{ school.name or '' }}"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">CUIT *</label>
+                <input
+                    type="text"
+                    name="cuit"
+                    class="form-control"
+                    value="{{ school.cuit or '' }}"
+                    minlength="11"
+                    maxlength="11"
+                    required
+                >
+                <small class="text-muted">
+                    Ingresar 11 números, sin guiones.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email institucional *</label>
+                <input
+                    type="email"
+                    name="email"
+                    class="form-control"
+                    value="{{ school.email or '' }}"
+                    required
+                >
+                <small class="text-muted">
+                    Esto modifica el email institucional del colegio, no necesariamente el usuario de login.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Teléfono *</label>
+                <input
+                    type="text"
+                    name="phone"
+                    class="form-control"
+                    value="{{ school.phone or '' }}"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Dirección *</label>
+                <input
+                    type="text"
+                    name="address"
+                    class="form-control"
+                    value="{{ school.address or '' }}"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Guardar cambios
+            </button>
+
+            <a href="/schools/{{ school.id }}/users" class="btn btn-outline-info">
+                Usuarios
+            </a>
+
+            <a href="/schools/" class="btn btn-secondary">
+                Cancelar
+            </a>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

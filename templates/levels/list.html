@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Niveles</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="/schools/{{ school.id }}/students" class="btn btn-secondary">
+            Volver
+        </a>
+
+        <a href="/schools/{{ school.id }}/levels/create" class="btn btn-primary">
+            Nuevo nivel
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    Antes de importar alumnos, creá los niveles y usá el alias exacto en el Excel.
+    La columna debe llamarse <strong>nivel_alias</strong>.
+    Cada nivel debe tener configurado su <strong>punto de venta ARCA</strong>.
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        {% if levels %}
+
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nivel</th>
+                    <th>Alias Excel</th>
+                    <th>Cuota mensual</th>
+                    <th>Punto de venta</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for level in levels %}
+                    <tr>
+                        <td class="text-muted">#{{ level.id }}</td>
+
+                        <td class="fw-semibold">
+                            {{ level.name }}
+                        </td>
+
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ level.alias or "-" }}
+                            </span>
+                        </td>
+
+                        <td class="fw-bold">
+                            $ {{ "%.2f"|format(level.monthly_fee or 0) }}
+                        </td>
+
+                        <td>
+                            {% if level.point_of_sale %}
+                                <span class="badge bg-dark">
+                                    {{ "%04d"|format(level.point_of_sale) }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    Sin configurar
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if level.is_active %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="/schools/{{ school.id }}/levels/{{ level.id }}/edit"
+                               class="btn btn-sm btn-outline-primary">
+                                Editar
+                            </a>
+
+                            <form
+                                method="post"
+                                action="/schools/{{ school.id }}/levels/{{ level.id }}/toggle-active"
+                                class="d-inline"
+                            >
+                                {% if level.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Desactivar
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Activar
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+
+            <div class="text-center py-5">
+                <h5 class="mb-2">Todavía no hay niveles cargados</h5>
+                <p class="text-muted mb-4">
+                    Creá niveles como Inicial, Primario o Secundario con su alias, cuota mensual y punto de venta.
+                </p>
+
+                <a href="/schools/{{ school.id }}/levels/create" class="btn btn-primary">
+                    Crear nivel
+                </a>
+            </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

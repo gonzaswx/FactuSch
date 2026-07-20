@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Configuración</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <a href="/schools" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+
+        <form method="post" action="/schools/{{ school.id }}/settings" enctype="multipart/form-data">
+
+            <h5 class="mb-3">Configuración de email</h5>
+
+            <p class="text-muted">
+                Estos datos los configura el implementador. Se usan para enviar facturas PDF a los responsables de los alumnos.
+            </p>
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="form-label">SMTP Host</label>
+                    <input type="text" name="smtp_host" class="form-control"
+                           value="{{ settings.smtp_host or '' }}"
+                           placeholder="Ej: smtp.gmail.com">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">SMTP Puerto</label>
+                    <input type="number" name="smtp_port" class="form-control"
+                           value="{{ settings.smtp_port or 587 }}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Usuario SMTP</label>
+                <input type="text" name="smtp_user" class="form-control"
+                       value="{{ settings.smtp_user or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña SMTP / App password</label>
+                <input type="password" name="smtp_password" class="form-control"
+                       value="{{ settings.smtp_password or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email remitente</label>
+                <input type="email" name="smtp_from" class="form-control"
+                       value="{{ settings.smtp_from or '' }}">
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">Configuración AFIP / ARCA</h5>
+
+            {% if arca_test_result %}
+                {% if arca_test_result.ok %}
+                    <div class="alert alert-success">
+                        {{ arca_test_result.message }}
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <strong>{{ arca_test_result.message }}</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for error in arca_test_result.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            {% if arca_invoice_result %}
+                {% if arca_invoice_result.ok %}
+                    <div class="alert alert-success">
+                        <strong>{{ arca_invoice_result.message }}</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Punto de venta: {{ arca_invoice_result.data.punto_venta }}</li>
+                            <li>Tipo comprobante: {{ arca_invoice_result.data.tipo_comprobante }}</li>
+                            <li>Número: {{ arca_invoice_result.data.numero }}</li>
+                            <li>Resultado: {{ arca_invoice_result.data.resultado }}</li>
+                            <li>CAE: {{ arca_invoice_result.data.cae }}</li>
+                            <li>Vencimiento CAE: {{ arca_invoice_result.data.cae_vto }}</li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <strong>{{ arca_invoice_result.message }}</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for error in arca_invoice_result.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="alert alert-info">
+                Para implementar una escuela se necesita: CUIT, razón social exacta, punto de venta,
+                acceso con clave fiscal y certificado CRT emitido por ARCA.
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">CUIT de la escuela</label>
+                <input type="text" name="afip_cuit" class="form-control"
+                       value="{{ settings.afip_cuit or '' }}"
+                       placeholder="Ej: 30123456789">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Razón social exacta</label>
+                <input type="text" name="afip_business_name" class="form-control"
+                       value="{{ settings.afip_business_name or school.name }}">
+            </div>
+
+            {% if settings.afip_server_hostname %}
+                <div class="mb-3">
+                    <label class="form-label">Alias técnico generado</label>
+                    <input type="text" class="form-control"
+                           value="{{ settings.afip_server_hostname }}"
+                           readonly>
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="form-label">Punto de venta</label>
+                <input type="number" name="afip_point_of_sale" class="form-control"
+                       value="{{ settings.afip_point_of_sale or 1 }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Tipo de comprobante</label>
+                <select name="invoice_type" class="form-select">
+                    <option value="11" {% if settings.invoice_type == 11 or not settings.invoice_type %}selected{% endif %}>
+                        Factura C - Monotributo
+                    </option>
+                    <option value="6" {% if settings.invoice_type == 6 %}selected{% endif %}>
+                        Factura B - Responsable Inscripto a consumidor final
+                    </option>
+                    <option value="1" {% if settings.invoice_type == 1 %}selected{% endif %}>
+                        Factura A - Responsable Inscripto a Responsable Inscripto
+                    </option>
+                </select>
+                <small class="text-muted">
+                    Este valor define qué comprobante se emite en ARCA y qué título aparece en el PDF.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Entorno</label>
+                <select name="afip_environment" class="form-select">
+                    <option value="mock" {% if settings.afip_environment == "mock" %}selected{% endif %}>
+                        Mock / Pruebas internas
+                    </option>
+                    <option value="homo" {% if settings.afip_environment == "homo" %}selected{% endif %}>
+                        Homologación
+                    </option>
+                    <option value="prod" {% if settings.afip_environment == "prod" %}selected{% endif %}>
+                        Producción
+                    </option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Certificado CRT emitido por ARCA</label>
+                <input type="file" name="afip_cert_file" class="form-control" accept=".crt,.pem">
+
+                {% if settings.afip_cert_path %}
+                    <small class="text-success">Certificado cargado: {{ settings.afip_cert_path }}</small>
+                {% else %}
+                    <small class="text-muted">Todavía no hay certificado cargado.</small>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Clave privada Key</label>
+                <small class="text-muted d-block">
+                    Opcional. Si el sistema genera el CSR, la KEY se crea automáticamente.
+                </small>
+                <input type="file" name="afip_key_file" class="form-control" accept=".key,.pem">
+
+                {% if settings.afip_key_path %}
+                    <small class="text-success">KEY cargada: {{ settings.afip_key_path }}</small>
+                {% else %}
+                    <small class="text-muted">Todavía no hay KEY cargada.</small>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Archivo CSR</label>
+                <small class="text-muted d-block">
+                    Opcional. Solo si la escuela ya generó el CSR previamente.
+                </small>
+                <input type="file" name="afip_csr_file" class="form-control" accept=".csr,.pem">
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">Personalización de factura PDF</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Logo del colegio</label>
+                <input type="file" name="invoice_logo_file" class="form-control" accept=".png,.jpg,.jpeg">
+
+                {% if settings.invoice_logo_path %}
+                    <small class="text-success">Logo cargado: {{ settings.invoice_logo_path }}</small>
+                {% else %}
+                    <small class="text-muted">Todavía no hay logo cargado.</small>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Color principal de la factura</label>
+                <input
+                    type="text"
+                    name="invoice_primary_color"
+                    class="form-control"
+                    value="{{ settings.invoice_primary_color or '#111827' }}"
+                    placeholder="#111827"
+                >
+                <small class="text-muted">
+                    Usá formato hexadecimal. Ejemplo: #0F3B2E
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Texto legal / leyenda</label>
+                <textarea
+                    name="invoice_legal_text"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Ej: Documento válido como comprobante electrónico."
+                >{{ settings.invoice_legal_text or '' }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Pie de factura</label>
+                <textarea
+                    name="invoice_footer_text"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Ej: Gracias por utilizar nuestro sistema de facturación."
+                >{{ settings.invoice_footer_text or '' }}</textarea>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-primary">
+                    Guardar configuración
+                </button>
+
+                <button type="submit"
+                        formaction="/schools/{{ school.id }}/settings/afip/test"
+                        formmethod="post"
+                        class="btn btn-outline-success">
+                    Probar configuración ARCA
+                </button>
+
+                <button type="submit"
+                        formaction="/schools/{{ school.id }}/settings/afip/test-invoice"
+                        formmethod="post"
+                        class="btn btn-outline-danger">
+                    Emitir factura prueba ARCA
+                </button>
+
+                <a href="/schools/{{ school.id }}/settings/afip/diagnostic"
+                   class="btn btn-outline-info">
+                    Diagnóstico ARCA
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        <h5 class="mb-3">Asistente certificado AFIP / ARCA</h5>
+
+        <p class="text-muted">
+            El sistema genera la clave privada y el archivo CSR. Luego se debe ingresar a ARCA con clave fiscal,
+            subir el CSR, descargar el certificado CRT y cargarlo en esta pantalla.
+        </p>
+
+        <form method="post" action="/schools/{{ school.id }}/settings/afip/generate-csr">
+
+            <div class="mb-3">
+                <label class="form-label">CUIT de la escuela</label>
+                <input type="text" name="cuit" class="form-control"
+                       value="{{ settings.afip_cuit or '' }}"
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Razón social exacta</label>
+                <input type="text" name="business_name" class="form-control"
+                       value="{{ settings.afip_business_name or school.name }}"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-outline-primary">
+                Generar KEY + CSR
+            </button>
+
+            <a href="/schools/{{ school.id }}/settings/afip/download-csr" class="btn btn-outline-secondary">
+                Descargar CSR
+            </a>
+
+        </form>
+
+        <hr class="my-4">
+
+        <h6>Estado de certificado</h6>
+
+        <ul class="mb-0">
+            <li>
+                Clave privada:
+                {% if settings.afip_key_path %}
+                    <span class="text-success">Generada / cargada</span>
+                {% else %}
+                    <span class="text-muted">Pendiente</span>
+                {% endif %}
+            </li>
+
+            <li>
+                CSR:
+                {% if settings.afip_key_path %}
+                    <span class="text-success">Disponible para descargar si fue generado por el sistema</span>
+                {% else %}
+                    <span class="text-muted">Pendiente</span>
+                {% endif %}
+            </li>
+
+            <li>
+                Certificado CRT:
+                {% if settings.afip_cert_path %}
+                    <span class="text-success">Cargado</span>
+                {% else %}
+                    <span class="text-muted">Pendiente</span>
+                {% endif %}
+            </li>
+
+            <li>
+                Tipo de comprobante:
+                {% if settings.invoice_type == 1 %}
+                    <span class="text-success">Factura A</span>
+                {% elif settings.invoice_type == 6 %}
+                    <span class="text-success">Factura B</span>
+                {% else %}
+                    <span class="text-success">Factura C</span>
+                {% endif %}
+            </li>
+
+            <li>
+                Logo PDF:
+                {% if settings.invoice_logo_path %}
+                    <span class="text-success">Cargado</span>
+                {% else %}
+                    <span class="text-muted">Opcional</span>
+                {% endif %}
+            </li>
+
+            <li>
+                Alias técnico:
+                {% if settings.afip_server_hostname %}
+                    <span class="text-success">{{ settings.afip_server_hostname }}</span>
+                {% else %}
+                    <span class="text-muted">Se genera automáticamente</span>
+                {% endif %}
+            </li>
+        </ul>
+
+    </div>
+</div>
+
+{% endblock %}

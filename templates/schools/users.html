@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Usuarios del colegio</h1>
+        <p class="page-subtitle mb-0">
+            {{ school.name }}
+        </p>
+    </div>
+
+    <a href="/schools/" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+{% endif %}
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+
+        <h5 class="mb-3">Crear usuario administrativo</h5>
+
+        <form method="post" action="/schools/{{ school.id }}/users/create">
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Nombre</label>
+                    <input
+                        type="text"
+                        name="full_name"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Email</label>
+                    <input
+                        type="email"
+                        name="email"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Contraseña inicial</label>
+                    <input
+                        type="password"
+                        name="password"
+                        class="form-control"
+                        minlength="8"
+                        required
+                    >
+                    <small class="text-muted">
+                        Mínimo 8 caracteres y al menos un signo.
+                    </small>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Crear usuario
+            </button>
+
+        </form>
+
+    </div>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        <h5 class="mb-3">Usuarios registrados</h5>
+
+        {% if users %}
+
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td class="text-muted">#{{ user.id }}</td>
+
+                        <td>{{ user.full_name or "-" }}</td>
+
+                        <td>{{ user.email }}</td>
+
+                        <td>
+                            <span class="badge bg-primary">
+                                {{ user.role }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Bloqueado</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ user.created_at or "-" }}</td>
+
+                        <td class="text-end" style="min-width: 420px;">
+
+                            <form
+                                method="post"
+                                action="/schools/{{ school.id }}/users/{{ user.id }}/reset-password"
+                                class="d-inline"
+                            >
+                                <input
+                                    type="password"
+                                    name="password"
+                                    class="form-control form-control-sm d-inline w-auto"
+                                    placeholder="Nueva clave"
+                                    minlength="8"
+                                    required
+                                >
+
+                                <button type="submit" class="btn btn-sm btn-outline-warning">
+                                    Reset clave
+                                </button>
+                            </form>
+
+                            <form
+                                method="post"
+                                action="/schools/{{ school.id }}/users/{{ user.id }}/toggle-active"
+                                class="d-inline"
+                            >
+                                {% if user.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Bloquear
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Habilitar
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+
+            <p class="text-muted mb-0">
+                Todavía no hay usuarios administrativos para este colegio.
+            </p>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Cuenta corriente del alumno</h1>
+        <p class="page-subtitle mb-0">
+            {{ school.name }} · {{ student.full_name }}
+        </p>
+    </div>
+
+    <a href="/schools/{{ school.id }}/students" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+{% if email_status %}
+    {% if email_status == "success" %}
+        <div class="alert alert-success">
+            {{ email_message }}
+        </div>
+    {% else %}
+        <div class="alert alert-danger">
+            {{ email_message }}
+        </div>
+    {% endif %}
+{% endif %}
+
+<div class="row mb-4">
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Total facturado</small>
+                <h4 class="mb-0">$ {{ "%.2f"|format(total_invoiced) }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Total pagado</small>
+                <h4 class="mb-0 text-success">$ {{ "%.2f"|format(total_paid) }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Saldo pendiente</small>
+                <h4 class="mb-0 text-warning">$ {{ "%.2f"|format(total_pending) }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Saldo vencido</small>
+                <h4 class="mb-0 text-danger">$ {{ "%.2f"|format(total_overdue) }}</h4>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mb-4">
+
+    <div class="col-md-4">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturas pagadas</small>
+                <h4 class="mb-0 text-success">{{ paid_count }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturas pendientes</small>
+                <h4 class="mb-0 text-warning">{{ pending_count }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card app-card">
+            <div class="card-body">
+                <small class="text-muted">Facturas vencidas</small>
+                <h4 class="mb-0 text-danger">{{ overdue_count }}</h4>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card app-card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Datos del alumno</h5>
+
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted">DNI alumno</small>
+                <div class="fw-semibold">{{ student.dni or "-" }}</div>
+            </div>
+
+            <div class="col-md-3">
+                <small class="text-muted">Email responsable</small>
+                <div class="fw-semibold">{{ student.email or "-" }}</div>
+            </div>
+
+            <div class="col-md-3">
+                <small class="text-muted">Tutor</small>
+                <div class="fw-semibold">{{ student.guardian_name or "-" }}</div>
+            </div>
+
+            <div class="col-md-3">
+                <small class="text-muted">DNI tutor</small>
+                <div class="fw-semibold">{{ student.guardian_dni or "-" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        <h5 class="mb-3">Movimientos</h5>
+
+        {% if invoices %}
+
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Período</th>
+                    <th>Factura</th>
+                    <th>Importe</th>
+                    <th>Vencimiento</th>
+                    <th>Estado AFIP</th>
+                    <th>Pago</th>
+                    <th>Fecha pago</th>
+                    <th>Email</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for invoice in invoices %}
+                    <tr>
+                        <td>#{{ invoice.id }}</td>
+
+                        <td>
+                            {% if invoice.period_month and invoice.period_year %}
+                                {{ invoice.period_month }}/{{ invoice.period_year }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.full_invoice_number %}
+                                {{ invoice.full_invoice_number }}
+                            {% else %}
+                                {{ invoice.point_of_sale }}-{{ invoice.invoice_number }}
+                            {% endif %}
+                        </td>
+
+                        <td class="fw-bold">
+                            $ {{ "%.2f"|format(invoice.amount) }}
+                        </td>
+
+                        <td>{{ invoice.due_date or "-" }}</td>
+
+                        <td>
+                            {% if invoice.status == "approved" %}
+                                <span class="badge bg-success">Aprobada</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rechazada</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.is_paid %}
+                                <span class="badge bg-success">Pagada</span>
+                                <div class="small text-muted">
+                                    {{ invoice.payment_method or "Sin método" }}
+                                </div>
+                            {% elif invoice.due_date and invoice.due_date < today %}
+                                <span class="badge bg-danger">Vencida</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.paid_at %}
+                                {{ invoice.paid_at }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if invoice.email_status == "sent" %}
+                                <span class="badge bg-success">Enviado</span>
+                            {% elif invoice.email_status == "error" %}
+                                <span class="badge bg-danger">Error</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pendiente</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end" style="min-width: 430px;">
+                            <a href="/invoices/{{ invoice.id }}/pdf" class="btn btn-sm btn-outline-primary">
+                                PDF
+                            </a>
+
+                            {% if invoice.status == "approved" %}
+                                <form
+                                    method="post"
+                                    action="/schools/{{ school.id }}/students/{{ student.id }}/invoices/{{ invoice.id }}/resend-email"
+                                    class="d-inline"
+                                >
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Reenviar email
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            {% if not invoice.is_paid and invoice.status == "approved" %}
+                                <form
+                                    method="post"
+                                    action="/schools/{{ school.id }}/students/{{ student.id }}/invoices/{{ invoice.id }}/pay"
+                                    class="d-inline"
+                                >
+                                    <select name="payment_method" class="form-select form-select-sm d-inline w-auto" required>
+                                        <option value="Manual">Manual</option>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Transferencia">Transferencia</option>
+                                        <option value="Mercado Pago">Mercado Pago</option>
+                                        <option value="Débito">Débito</option>
+                                        <option value="Crédito">Crédito</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+
+                                    <input
+                                        type="text"
+                                        name="payment_note"
+                                        class="form-control form-control-sm d-inline w-auto"
+                                        placeholder="Nota"
+                                    >
+
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        Registrar pago
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% set invoice_logs = logs_by_invoice.get(invoice.id, []) %}
+
+                    {% if invoice.email_error or invoice.payment_note or invoice.afip_observation or invoice_logs %}
+                        <tr>
+                            <td colspan="10" class="bg-light">
+
+                                {% if invoice.afip_observation %}
+                                    <div class="small text-danger mb-1">
+                                        <strong>Observación ARCA:</strong> {{ invoice.afip_observation }}
+                                    </div>
+                                {% endif %}
+
+                                {% if invoice.email_error %}
+                                    <div class="small text-danger mb-1">
+                                        <strong>Error email:</strong> {{ invoice.email_error }}
+                                    </div>
+                                {% endif %}
+
+                                {% if invoice.payment_note %}
+                                    <div class="small text-muted mb-1">
+                                        <strong>Nota pago:</strong> {{ invoice.payment_note }}
+                                    </div>
+                                {% endif %}
+
+                                {% if invoice_logs %}
+                                    <div class="mt-2">
+                                        <strong class="small">Historial:</strong>
+
+                                        <ul class="small mb-0 mt-1">
+                                            {% for log in invoice_logs %}
+                                                <li>
+                                                    <span class="text-muted">{{ log.created_at }}</span>
+                                                    · <strong>{{ log.event_type }}</strong>
+                                                    · {{ log.message }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+
+            <p class="text-muted mb-0">Este alumno todavía no tiene facturas.</p>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

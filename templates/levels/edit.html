@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Editar nivel</h1>
+        <p class="page-subtitle mb-0">
+            {{ school.name }} · {{ level.name }}
+        </p>
+    </div>
+
+    <a href="/schools/{{ school.id }}/levels" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="/schools/{{ school.id }}/levels/{{ level.id }}/edit">
+
+            <div class="mb-3">
+                <label class="form-label">Nombre del nivel</label>
+                <input
+                    type="text"
+                    name="name"
+                    class="form-control"
+                    value="{{ level.name or '' }}"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Alias para importación</label>
+                <input
+                    type="text"
+                    name="alias"
+                    class="form-control"
+                    value="{{ level.alias or '' }}"
+                    required
+                >
+                <small class="text-muted">
+                    Si cambiás este alias, los próximos Excel deberán usar el nuevo valor.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Cuota mensual</label>
+                <input
+                    type="number"
+                    name="monthly_fee"
+                    step="0.01"
+                    min="0"
+                    class="form-control"
+                    value="{{ level.monthly_fee or 0 }}"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Punto de venta ARCA</label>
+                <input
+                    type="number"
+                    name="point_of_sale"
+                    min="1"
+                    class="form-control"
+                    value="{{ level.point_of_sale or '' }}"
+                    required
+                >
+                <small class="text-muted">
+                    Este punto de venta se usará al facturar alumnos de este nivel.
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Guardar cambios
+            </button>
+
+            <a href="/schools/{{ school.id }}/levels" class="btn btn-secondary">
+                Cancelar
+            </a>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

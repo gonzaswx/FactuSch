@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title mb-1">Nuevo alumno</h1>
+        <p class="page-subtitle mb-0">{{ school.name }}</p>
+    </div>
+
+    <a href="/schools/{{ school.id }}/students" class="btn btn-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="card app-card">
+    <div class="card-body">
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="/schools/{{ school.id }}/students/create">
+
+            <h5 class="mb-3">Datos del alumno</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Nombre completo del alumno</label>
+                <input
+                    type="text"
+                    name="full_name"
+                    class="form-control"
+                    value="{{ form.full_name if form else '' }}"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">DNI del alumno</label>
+                <input
+                    type="text"
+                    name="dni"
+                    class="form-control"
+                    value="{{ form.dni if form else '' }}"
+                    required
+                >
+                <small class="text-muted">
+                    Solo números. No puede repetirse dentro de la misma escuela.
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email del responsable</label>
+                <input
+                    type="email"
+                    name="email"
+                    class="form-control"
+                    value="{{ form.email if form else '' }}"
+                >
+                <small class="text-muted">
+                    A este email se enviará la factura.
+                </small>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">Nivel y cuota</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Nivel</label>
+                <select name="level_id" class="form-select">
+                    <option value="">Sin nivel</option>
+
+                    {% for level in levels %}
+                        <option
+                            value="{{ level.id }}"
+                            {% if form and form.level_id == level.id %}selected{% endif %}
+                        >
+                            {{ level.name }} - $ {{ "%.2f"|format(level.monthly_fee or 0) }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                {% if not levels %}
+                    <small class="text-warning">
+                        Todavía no hay niveles cargados. Podés crearlos desde la pantalla de niveles.
+                    </small>
+                {% else %}
+                    <small class="text-muted">
+                        Si no cargás una cuota manual, se usará la cuota del nivel seleccionado.
+                    </small>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Cuota personalizada</label>
+                <input
+                    type="number"
+                    name="monthly_fee"
+                    step="0.01"
+                    min="0"
+                    class="form-control"
+                    value="{{ form.monthly_fee if form else 0 }}"
+                >
+                <small class="text-muted">
+                    Dejá 0 para usar la cuota del nivel. Usá este campo solo para becas, descuentos o casos especiales.
+                </small>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">Curso y tutor</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Curso</label>
+                <input
+                    type="text"
+                    name="course"
+                    class="form-control"
+                    value="{{ form.course if form else '' }}"
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">División</label>
+                <input
+                    type="text"
+                    name="division"
+                    class="form-control"
+                    value="{{ form.division if form else '' }}"
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Nombre del tutor</label>
+                <input
+                    type="text"
+                    name="guardian_name"
+                    class="form-control"
+                    value="{{ form.guardian_name if form else '' }}"
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">DNI del tutor</label>
+                <input
+                    type="text"
+                    name="guardian_dni"
+                    class="form-control"
+                    value="{{ form.guardian_dni if form else '' }}"
+                >
+                <small class="text-muted">
+                    Debe ser numérico y no puede ser igual al DNI del alumno.
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Guardar alumno
+            </button>
+
+            <a href="/schools/{{ school.id }}/students" class="btn btn-secondary">
+                Cancelar
+            </a>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}
